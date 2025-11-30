@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-title" content="로또명당">
+    <meta name="application-name" content="로또명당">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#121212">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1041/1041168.png">
+    <link rel="shortcut icon" href="https://cdn-icons-png.flaticon.com/512/1041/1041168.png">
+
+    <title>Premium Lotto Generator</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --gold-gradient: linear-gradient(135deg, #d4af37 0%, #f9e29c 50%, #d4af37 100%);
+            --gold-color: #d4af37;
+            --ball-shadow: inset -5px -5px 10px rgba(0,0,0,0.4), 3px 3px 10px rgba(0,0,0,0.3);
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            padding-top: env(safe-area-inset-top);
+            background-color: var(--bg-color);
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        h1 {
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+
+        /* 결과 화면 영역 */
+        .result-container {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            min-height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            border: 1px solid #333;
+        }
+
+        .placeholder {
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        /* 로또 공 디자인 */
+        .ball {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            box-shadow: var(--ball-shadow);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .ball-yellow { background: radial-gradient(circle at 30% 30%, #fbc400, #c49800); }
+        .ball-blue { background: radial-gradient(circle at 30% 30%, #69c8f2, #4788a3); }
+        .ball-red { background: radial-gradient(circle at 30% 30%, #ff7272, #a64b4b); }
+        .ball-gray { background: radial-gradient(circle at 30% 30%, #aaaaaa, #555555); }
+        .ball-green { background: radial-gradient(circle at 30% 30%, #b0d840, #7a962a); }
+
+        /* 토글 스위치 영역 */
+        .toggle-container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        .switch-label {
+            margin-left: 10px;
+            font-size: 1rem;
+            color: #ccc;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--gold-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        /* 제외수 선택 영역 */
+        .exclude-wrapper {
+            width: 100%;
+            max-width: 400px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            opacity: 0;
+        }
+
+        .exclude-wrapper.show {
+            max-height: 500px;
+            opacity: 1;
+            margin-bottom: 20px;
+        }
+
+        .exclude-section {
+            width: 100%;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 5px;
+        }
+
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid #333;
+        }
+
+        .num-btn {
+            aspect-ratio: 1;
+            border: 1px solid #444;
+            background: transparent;
+            color: #aaa;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .num-btn.excluded {
+            background-color: #ff3b30;
+            color: white;
+            border-color: #ff3b30;
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        /* 생성 버튼 */
+        .generate-btn {
+            margin-top: 10px;
+            width: 100%;
+            max-width: 400px;
+            padding: 18px;
+            border: none;
+            border-radius: 50px;
+            background: var(--gold-gradient);
+            color: #3e2e00;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .generate-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 버튼 비활성화 상태 스타일 */
+        .generate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            background: #555; /* 회색 처리 */
+            color: #aaa;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 380px) {
+            .number-grid { grid-template-columns: repeat(6, 1fr); }
+            .ball { width: 40px; height: 40px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Lotto 6/45</h1>
+
+    <div class="result-container" id="resultArea">
+        <span class="placeholder">생성 버튼을 눌러주세요</span>
+    </div>
+
+    <div class="toggle-container">
+        <label class="switch">
+            <input type="checkbox" id="excludeToggle">
+            <span class="slider round"></span>
+        </label>
+        <span class="switch-label">제외수 선택하기</span>
+    </div>
+
+    <div class="exclude-wrapper" id="excludeWrapper">
+        <div class="exclude-section">
+            <div class="section-title">
+                <span>제외할 번호 선택</span>
+                <span id="excludeCount">0개 제외됨</span>
+            </div>
+            <div class="number-grid" id="numberGrid">
+                </div>
+        </div>
+    </div>
+
+    <button class="generate-btn" id="genBtn">번호 생성하기</button>
+
+    <script>
+        window.onload = function() {
+            const excludedNumbers = new Set();
+            const grid = document.getElementById('numberGrid');
+            const resultArea = document.getElementById('resultArea');
+            const excludeCountLabel = document.getElementById('excludeCount');
+            const generateBtn = document.getElementById('genBtn');
+            const excludeToggle = document.getElementById('excludeToggle');
+            const excludeWrapper = document.getElementById('excludeWrapper');
+            
+            // [중복 실행 방지 플래그]
+            let isGenerating = false;
+
+            // 1. 번호 그리드 생성
+            if(grid) {
+                for (let i = 1; i <= 45; i++) {
+                    const btn = document.createElement('div');
+                    btn.className = 'num-btn';
+                    btn.textContent = i;
+                    btn.addEventListener('click', function() {
+                        toggleExclusion(i, btn);
+                    });
+                    grid.appendChild(btn);
+                }
+            }
+
+            // 2. 토글 스위치 이벤트
+            if(excludeToggle) {
+                excludeToggle.addEventListener('change', function() {
+                    if(this.checked) {
+                        excludeWrapper.classList.add('show');
+                    } else {
+                        excludeWrapper.classList.remove('show');
+                    }
+                });
+            }
+
+            // 3. 생성 버튼 이벤트
+            if(generateBtn) {
+                generateBtn.addEventListener('click', generateNumbers);
+            }
+
+            function toggleExclusion(num, element) {
+                if (excludedNumbers.has(num)) {
+                    excludedNumbers.delete(num);
+                    element.classList.remove('excluded');
+                } else {
+                    if (excludedNumbers.size >= 39) {
+                        alert('최소 6개의 번호는 남아있어야 합니다.');
+                        return;
+                    }
+                    excludedNumbers.add(num);
+                    element.classList.add('excluded');
+                }
+                excludeCountLabel.textContent = `${excludedNumbers.size}개 제외됨`;
+            }
+
+            function getBallColorClass(num) {
+                if (num <= 10) return 'ball-yellow';
+                if (num <= 20) return 'ball-blue';
+                if (num <= 30) return 'ball-red';
+                if (num <= 40) return 'ball-gray';
+                return 'ball-green';
+            }
+
+            function generateNumbers() {
+                // 이미 실행 중이면 무시 (버그 수정 핵심)
+                if (isGenerating) return;
+
+                const pool = [];
+                const useExclusion = excludeToggle.checked;
+
+                for (let i = 1; i <= 45; i++) {
+                    if (useExclusion && excludedNumbers.has(i)) {
+                        continue;
+                    }
+                    pool.push(i);
+                }
+
+                if (pool.length < 6) {
+                    alert('추첨할 수 있는 번호가 부족합니다.');
+                    return;
+                }
+
+                // 실행 상태 잠금
+                isGenerating = true;
+                generateBtn.disabled = true;
+                generateBtn.textContent = "생성 중...";
+
+                const result = [];
+                while (result.length < 6) {
+                    const randomIndex = Math.floor(Math.random() * pool.length);
+                    const num = pool[randomIndex];
+                    result.push(num);
+                    pool.splice(randomIndex, 1);
+                }
+
+                result.sort((a, b) => a - b);
+                renderBalls(result);
+            }
+
+            function renderBalls(numbers) {
+                resultArea.innerHTML = ''; 
+                
+                numbers.forEach((num, index) => {
+                    setTimeout(() => {
+                        const ball = document.createElement('div');
+                        ball.className = `ball ${getBallColorClass(num)}`;
+                        ball.textContent = num;
+                        resultArea.appendChild(ball);
+
+                        // 마지막 공이 나왔을 때만 잠금 해제
+                        if (index === numbers.length - 1) {
+                            isGenerating = false;
+                            generateBtn.disabled = false;
+                            generateBtn.textContent = "번호 생성하기";
+                        }
+                    }, index * 100); 
+                });
+            }
+        };
+    </script>
+</body>
+</html>
