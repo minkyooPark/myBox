@@ -133,4 +133,441 @@
         }
 
         .ball-yellow { background: radial-gradient(circle at 30% 30%, #fbc400, #c49800); }
-        .ball-blue { background: radial-gradient(circle at 30% 30%, #69c8f2, #4788a
+        .ball-blue { background: radial-gradient(circle at 30% 30%, #69c8f2, #4788a3); }
+        .ball-red { background: radial-gradient(circle at 30% 30%, #ff7272, #a64b4b); }
+        .ball-gray { background: radial-gradient(circle at 30% 30%, #aaaaaa, #555555); }
+        .ball-green { background: radial-gradient(circle at 30% 30%, #b0d840, #7a962a); }
+
+        /* 3단 모드 선택 (일반 / 제외 / 고정) */
+        .mode-selector {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .mode-label {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 0.85rem;
+            color: #888;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        input[type="radio"] { display: none; }
+
+        /* 일반 모드 활성 */
+        input[id="modeNone"]:checked ~ label[for="modeNone"] {
+            background-color: #555;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* 제외 모드 활성 */
+        input[id="modeExclude"]:checked ~ label[for="modeExclude"] {
+            background-color: var(--red-color);
+            color: white;
+            font-weight: bold;
+        }
+        
+        /* 고정 모드 활성 */
+        input[id="modeFixed"]:checked ~ label[for="modeFixed"] {
+            background-color: var(--cyan-color);
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* 번호판 래퍼 (Show/Hide 애니메이션용) */
+        .grid-wrapper {
+            width: 100%;
+            max-width: 400px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.4s ease, opacity 0.4s ease;
+            margin-bottom: 0;
+        }
+
+        .grid-wrapper.show {
+            max-height: 600px; /* 충분한 높이 */
+            opacity: 1;
+            margin-bottom: 20px;
+        }
+
+        /* 번호 선택 그리드 내부 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 8px;
+            padding: 0 5px;
+        }
+
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid #333;
+        }
+
+        .num-btn {
+            aspect-ratio: 1;
+            border: 1px solid #444;
+            background: transparent;
+            color: #aaa;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        /* 제외 상태 */
+        .num-btn.excluded {
+            background-color: rgba(255, 59, 48, 0.2);
+            color: var(--red-color);
+            border-color: var(--red-color);
+            text-decoration: line-through;
+        }
+
+        /* 고정 상태 */
+        .num-btn.fixed {
+            background-color: rgba(0, 229, 255, 0.2);
+            color: var(--cyan-color);
+            border-color: var(--cyan-color);
+            font-weight: bold;
+            box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+        }
+
+        /* 고정 뱃지 */
+        .num-btn.fixed::after {
+            content: '고정';
+            position: absolute;
+            bottom: -2px;
+            font-size: 0.5rem;
+            transform: scale(0.8);
+        }
+
+        /* 생성 버튼 */
+        .generate-btn {
+            width: 100%;
+            max-width: 400px;
+            padding: 18px;
+            border: none;
+            border-radius: 50px;
+            background: var(--gold-gradient);
+            color: #3e2e00;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+            transition: transform 0.1s, opacity 0.2s;
+            margin-bottom: 30px;
+            margin-top: 20px; /* 버튼 상단 여백 확보 */
+        }
+
+        .generate-btn:active {
+            transform: scale(0.98);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #555;
+            color: #aaa;
+            box-shadow: none;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 380px) {
+            .number-grid { grid-template-columns: repeat(6, 1fr); }
+            .ball { width: 35px; height: 35px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Lotto Premium</h1>
+
+    <div class="option-container">
+        <span style="color: #aaa; font-size: 0.9rem;">생성 개수</span>
+        <select id="genCount" class="select-box">
+            <option value="1">1개</option>
+            <option value="2">2개</option>
+            <option value="3">3개</option>
+            <option value="4">4개</option>
+            <option value="5" selected>5개</option>
+            <option value="6">6개</option>
+            <option value="7">7개</option>
+            <option value="8">8개</option>
+            <option value="9">9개</option>
+            <option value="10">10개</option>
+        </select>
+    </div>
+
+    <div class="result-container" id="resultArea">
+        <div class="placeholder">
+            원하는 모드를 선택 후<br>버튼을 눌러주세요.
+        </div>
+    </div>
+
+    <div class="mode-selector">
+        <input type="radio" name="mode" id="modeNone" value="none" checked>
+        <label for="modeNone" class="mode-label">일반 (자동)</label>
+
+        <input type="radio" name="mode" id="modeExclude" value="exclude">
+        <label for="modeExclude" class="mode-label">제외수 설정</label>
+        
+        <input type="radio" name="mode" id="modeFixed" value="fixed">
+        <label for="modeFixed" class="mode-label">고정수 설정</label>
+    </div>
+
+    <div class="grid-wrapper" id="gridWrapper">
+        <div class="status-bar">
+            <span id="excludeStatus" style="color:var(--red-color)">제외: 0개</span>
+            <span id="fixedStatus" style="color:var(--cyan-color)">고정: 0개 (최대 5)</span>
+        </div>
+        <div class="number-grid" id="numberGrid">
+            </div>
+    </div>
+
+    <button class="generate-btn" id="genBtn">번호 생성하기</button>
+
+    <script>
+        window.onload = function() {
+            // 상태 관리
+            const state = {
+                excluded: new Set(),
+                fixed: new Set(),
+                isGenerating: false,
+                currentMode: 'none' // 'none', 'exclude', 'fixed'
+            };
+
+            // DOM 요소
+            const grid = document.getElementById('numberGrid');
+            const gridWrapper = document.getElementById('gridWrapper');
+            const resultArea = document.getElementById('resultArea');
+            const generateBtn = document.getElementById('genBtn');
+            const modeRadios = document.getElementsByName('mode');
+            const excludeLabel = document.getElementById('excludeStatus');
+            const fixedLabel = document.getElementById('fixedStatus');
+            const genCountSelect = document.getElementById('genCount');
+
+            // 1. 그리드 초기화
+            if(grid) {
+                for (let i = 1; i <= 45; i++) {
+                    const btn = document.createElement('div');
+                    btn.className = 'num-btn';
+                    btn.textContent = i;
+                    btn.dataset.num = i;
+                    btn.addEventListener('click', () => handleNumberClick(i, btn));
+                    grid.appendChild(btn);
+                }
+            }
+
+            // 2. 모드 변경 이벤트 (번호판 Show/Hide)
+            modeRadios.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    state.currentMode = e.target.value;
+                    
+                    if (state.currentMode === 'none') {
+                        // 일반 모드: 번호판 숨김
+                        gridWrapper.classList.remove('show');
+                        resultArea.innerHTML = '<div class="placeholder">완전 자동 모드입니다.<br>번호 생성하기를 눌러주세요.</div>';
+                    } else {
+                        // 설정 모드: 번호판 표시
+                        gridWrapper.classList.add('show');
+                        if (state.currentMode === 'exclude') {
+                            resultArea.innerHTML = '<div class="placeholder"><span style="color:var(--red-color)">제외할 번호</span>를<br>선택해주세요.</div>';
+                        } else {
+                            resultArea.innerHTML = '<div class="placeholder"><span style="color:var(--cyan-color)">포함시킬 번호</span>를<br>선택해주세요.</div>';
+                        }
+                    }
+                });
+            });
+
+            // 3. 번호 클릭 핸들러
+            function handleNumberClick(num, element) {
+                // 일반 모드이거나 생성 중일 땐 클릭 무시
+                if (state.isGenerating || state.currentMode === 'none') return;
+
+                if (state.currentMode === 'exclude') {
+                    // [제외 모드]
+                    if (state.fixed.has(num)) {
+                        // 고정수였으면 해제하고 제외로
+                        state.fixed.delete(num);
+                        element.classList.remove('fixed');
+                        state.excluded.add(num);
+                        element.classList.add('excluded');
+                    } else if (state.excluded.has(num)) {
+                        // 제외수였으면 해제
+                        state.excluded.delete(num);
+                        element.classList.remove('excluded');
+                    } else {
+                        // 선택 (유효성 체크)
+                        if (checkPoolSize(1)) {
+                            state.excluded.add(num);
+                            element.classList.add('excluded');
+                        }
+                    }
+                } else if (state.currentMode === 'fixed') {
+                    // [고정 모드]
+                    if (state.excluded.has(num)) {
+                        // 제외수였으면 해제하고 고정으로
+                        state.excluded.delete(num);
+                        element.classList.remove('excluded');
+                        addFixedNumber(num, element);
+                    } else if (state.fixed.has(num)) {
+                        // 고정수였으면 해제
+                        state.fixed.delete(num);
+                        element.classList.remove('fixed');
+                    } else {
+                        // 선택
+                        addFixedNumber(num, element);
+                    }
+                }
+                updateStatusLabels();
+            }
+
+            function addFixedNumber(num, element) {
+                if (state.fixed.size >= 5) {
+                    alert('반자동 고정수는 최대 5개까지만 선택 가능합니다.');
+                    return;
+                }
+                state.fixed.add(num);
+                element.classList.add('fixed');
+            }
+
+            // 생성 가능한 번호 조합이 남아있는지 체크
+            function checkPoolSize(additionalExcludeCount = 0) {
+                const remainingPool = 45 - state.excluded.size - state.fixed.size - additionalExcludeCount;
+                const slotsToFill = 6 - state.fixed.size;
+                
+                if (remainingPool < slotsToFill) {
+                    alert('선택 가능한 번호가 부족합니다. 제외수를 줄여주세요.');
+                    return false;
+                }
+                return true;
+            }
+
+            function updateStatusLabels() {
+                excludeLabel.textContent = `제외: ${state.excluded.size}개`;
+                fixedLabel.textContent = `고정: ${state.fixed.size}개 (최대 5)`;
+            }
+
+            // 4. 생성 버튼 이벤트
+            if(generateBtn) {
+                generateBtn.addEventListener('click', generateLottoNumbers);
+            }
+
+            async function generateLottoNumbers() {
+                if (state.isGenerating) return;
+
+                // 일반 모드면 설정을 무시하고 1-45 풀을 사용해야 하므로 별도 체크 안 함
+                // 제외/고정 모드일 때만 풀 사이즈 체크
+                if (state.currentMode !== 'none' && !checkPoolSize()) return;
+
+                state.isGenerating = true;
+                generateBtn.disabled = true;
+                generateBtn.textContent = "번호 생성 중...";
+                resultArea.innerHTML = ''; 
+
+                const count = parseInt(genCountSelect.value);
+                
+                for (let i = 0; i < count; i++) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    const numbers = getSingleSet();
+                    createResultRow(numbers, i + 1);
+                }
+
+                state.isGenerating = false;
+                generateBtn.disabled = false;
+                generateBtn.textContent = "번호 생성하기";
+            }
+
+            function getSingleSet() {
+                // 일반(자동) 모드일 경우: 사용자 설정 무시하고 완전 랜덤
+                if (state.currentMode === 'none') {
+                    const pool = [];
+                    for(let i=1; i<=45; i++) pool.push(i);
+                    
+                    const result = [];
+                    while(result.length < 6) {
+                        const idx = Math.floor(Math.random() * pool.length);
+                        result.push(pool[idx]);
+                        pool.splice(idx, 1);
+                    }
+                    return result.sort((a,b) => a-b);
+                }
+
+                // 제외/고정 모드일 경우: 설정 반영
+                const result = [...state.fixed]; // 고정수 담기
+                
+                const pool = [];
+                for(let i=1; i<=45; i++) {
+                    if (!state.excluded.has(i) && !state.fixed.has(i)) {
+                        pool.push(i);
+                    }
+                }
+
+                while (result.length < 6) {
+                    const randomIndex = Math.floor(Math.random() * pool.length);
+                    const num = pool[randomIndex];
+                    result.push(num);
+                    pool.splice(randomIndex, 1);
+                }
+
+                return result.sort((a, b) => a - b);
+            }
+
+            function createResultRow(numbers, index) {
+                const row = document.createElement('div');
+                row.className = 'result-row';
+                row.style.animationDelay = `${index * 0.1}s`;
+
+                numbers.forEach(num => {
+                    const ball = document.createElement('div');
+                    ball.className = `ball ${getBallColorClass(num)}`;
+                    
+                    // 고정 모드나 제외 모드일 때, 고정수로 선택된 번호면 강조
+                    if (state.currentMode !== 'none' && state.fixed.has(num)) {
+                        ball.style.border = '2px solid #00e5ff';
+                        ball.style.boxSizing = 'border-box';
+                    }
+                    
+                    ball.textContent = num;
+                    row.appendChild(ball);
+                });
+
+                resultArea.appendChild(row);
+            }
+
+            function getBallColorClass(num) {
+                if (num <= 10) return 'ball-yellow';
+                if (num <= 20) return 'ball-blue';
+                if (num <= 30) return 'ball-red';
+                if (num <= 40) return 'ball-gray';
+                return 'ball-green';
+            }
+        };
+    </script>
+</body>
+</html>
